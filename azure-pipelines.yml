@@ -1,0 +1,29 @@
+trigger:
+  branches:
+    include:
+      - main
+
+variables:
+  location: $(location)
+  scope: $(subscription)  # or use MG scope like /providers/Microsoft.Management/managementGroups/YOURMG
+  bicepFile: 'bicep/assign-cis-policy.bicep'
+
+stages:
+- stage: DeployCISBenchmark
+  displayName: 'Deploy CIS Benchmark Initiative'
+  jobs:
+  - job: DeployWithBicep
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: 'azurepolicy-iac'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az deployment sub create \
+            --location ${{ variables.location }} \
+            --template-file ${{ variables.bicepFile }} \
+            --parameters scope=${{ variables.scope }}
+      displayName: 'Deploy Bicep CIS Benchmark'
